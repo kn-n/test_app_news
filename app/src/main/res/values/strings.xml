@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">test_app_news</string>
+    <string name="tab_text_1">Новости</string>
+    <string name="tab_text_2">Темы</string>
+    <string name="add_category">Добавит тему</string>
+    <string name="no_filers">Нет фильтров</string>
+    <string name="hint_cn">Название темы на английском</string>
+    <string name="find">Найти</string>
+    <string name="no_news">Новостей не найдено</string>
+</resources>
