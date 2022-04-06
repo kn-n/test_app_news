@@ -7,4 +7,5 @@
     <string name="hint_cn">Название темы на английском</string>
     <string name="find">Найти</string>
     <string name="no_news">Новостей не найдено</string>
+    <string name="error">Ошибка</string>
 </resources>

@@ -82,6 +82,16 @@
         android:textSize="20sp"
         android:visibility="invisible"/>
 
+    <com.github.rahatarmanahmed.cpv.CircularProgressView
+        android:id="@+id/loading"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        app:cpv_animAutostart="true"
+        app:cpv_indeterminate="true"
+        app:cpv_color="@color/orange_700"
+        app:cpv_thickness="2dp"/>
+
     <include
         android:id="@+id/bs"
         layout="@layout/bottom_sheet_filter"/>

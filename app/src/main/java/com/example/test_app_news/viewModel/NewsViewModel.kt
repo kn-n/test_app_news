@@ -75,10 +75,13 @@ class NewsViewModel(application: Application): AndroidViewModel(application) {
     }
 
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
+    var searchResult: MutableLiveData<String> = MutableLiveData()
+
     private fun search(query: String){
         Log.d("SN", "Ищет по $query")
+        searchResult.postValue("Loading")
         compositeDisposable.add(RetrofitClient.buildService()
-            .searchForNews("ru", query)
+            .searchForNews(query,"ru")
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe({response -> onResponse(response, query)}, {t -> onFailure(t) }))
@@ -90,17 +93,19 @@ class NewsViewModel(application: Application): AndroidViewModel(application) {
         for (news in newsList){
             var imgURL = ""
             var description = ""
-            if (!news.urlToImg.isNullOrEmpty()) imgURL = news.urlToImg!!
+            if (!news.urlToImage.isNullOrEmpty()) imgURL = news.urlToImage!!
             if (!news.description.isNullOrEmpty()) description = news.description!!
             val newsForBD = NewsSQLite(category, news.source.name, news.title, description, news.url, imgURL, news.publishedAt)
             helper.insertNews(newsForBD)
         }
         _getNews.value = helper.getNews()
+        searchResult.postValue("Success")
         Log.d("SN", "Нашел по $category ${newsList.size}")
     }
 
     private fun onFailure(t: Throwable) {
         Log.d("SN", "Зафейлился $t")
+        searchResult.postValue("Error")
     }
 
     private val _getNews = MutableLiveData<ArrayList<NewsSQLite>>().apply {

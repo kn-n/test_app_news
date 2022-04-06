@@ -13,20 +13,9 @@ interface NewsApi {
 
     @GET("top-headlines")
     fun searchForNews(
+        @Query("q") category: String,
         @Query("country") country: String = "ru",
-        @Query("category") category: String,
         @Query("sortBy") sortBy: String = "publishedAt",
         @Query("apiKey") apiKey: String = API_KEY
     ): Observable<NewsResponse>
-
-//    @GET("v2/everything")
-//    suspend fun searchForCategoryNews(
-//        @Query("category")
-//        category: String,
-//        @Query("page")
-//        pageNumber: Int = 1,
-//        @Query("apiKey")
-//        apiKey: String = API_KEY
-//    ): Response<NewsResponse>
-
 }

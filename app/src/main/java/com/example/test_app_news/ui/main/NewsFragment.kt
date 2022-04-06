@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.VirtualLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -23,7 +24,7 @@ import com.example.test_app_news.viewModel.CategoriesViewModel
 import com.example.test_app_news.viewModel.NewsViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class NewsFragment: Fragment() {
+class NewsFragment : Fragment() {
 
     private lateinit var newsViewModel: NewsViewModel
 
@@ -48,17 +49,22 @@ class NewsFragment: Fragment() {
         newsViewModel.searchNews()
 
         binding.bs.recyclerViewFilters.layoutManager = LinearLayoutManager(context)
-        getNews()
+        newsViewModel.getAllCategories.observe(viewLifecycleOwner, Observer {
+            if (it.isEmpty()) {
+                showNoNews()
+                binding.date.visibility = View.GONE
+                stopLoading()
+            } else getNews()
+        })
 
-        binding.filterBtn.setOnClickListener{
+        binding.filterBtn.setOnClickListener {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
             newsViewModel.getAllCategories.observe(viewLifecycleOwner, Observer {
                 if (it.isEmpty()) {
                     binding.bs.noFilters.visibility = View.VISIBLE
                     binding.bs.recyclerViewFilters.visibility = View.GONE
                     binding.bs.setFilter.visibility = View.GONE
-                }
-                else{
+                } else {
                     binding.bs.noFilters.visibility = View.GONE
                     binding.bs.recyclerViewFilters.visibility = View.VISIBLE
                     binding.bs.setFilter.visibility = View.VISIBLE
@@ -73,8 +79,7 @@ class NewsFragment: Fragment() {
                 if (filersList.size == 0) {
                     getNews()
                     binding.numberOfFilters.text = ""
-                }
-                else {
+                } else {
                     getNewsWithFilter(filersList)
                     binding.numberOfFilters.text = filersList.size.toString()
                 }
@@ -87,16 +92,16 @@ class NewsFragment: Fragment() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun getNewsWithFilter(filters: ArrayList<String>){
+    private fun getNewsWithFilter(filters: ArrayList<String>) {
         newsViewModel.updateFilterSearch()
         newsViewModel.getNewsWithCategory.observe(viewLifecycleOwner, Observer { newsList ->
-            if (newsList.isEmpty()){
+            if (newsList.isEmpty()) {
                 binding.noNews.visibility = View.VISIBLE
                 var message = "Не найдено новостей по теме(ам)"
-                for (f in filters) message+=" $f"
+                for (f in filters) message += " $f"
                 binding.noNews.text = message
                 binding.date.visibility = View.GONE
-            }else{
+            } else {
                 binding.noNews.visibility = View.GONE
                 binding.date.visibility = View.VISIBLE
             }
@@ -105,20 +110,55 @@ class NewsFragment: Fragment() {
         })
     }
 
-    private fun getNews(){
-        newsViewModel.getNews.observe(viewLifecycleOwner, Observer { newsList ->
-            if (newsList.isEmpty()) {
-                binding.noNews.visibility = View.VISIBLE
-                binding.noNews.text = getString(R.string.no_news)
-                binding.date.visibility = View.GONE
-            }
-            else {
-                binding.noNews.visibility = View.GONE
-                binding.date.visibility = View.VISIBLE
-                newsList.sortByDescending { makeDate(it.publishedAt) }
-                binding.recyclerViewNews.adapter = NewsAdapter(newsList, this, binding.dateTxt)
+    private fun getNews() {
+        binding.noNews.visibility = View.GONE
+        newsViewModel.searchResult.observe(viewLifecycleOwner, Observer { status ->
+            when (status) {
+                "Success" -> {
+                    binding.noNews.visibility = View.GONE
+                    stopLoading()
+                    newsViewModel.getNews.observe(viewLifecycleOwner, Observer { newsList ->
+                        if (newsList.isEmpty()) {
+                            showNoNews()
+                            binding.date.visibility = View.GONE
+                        } else {
+                            binding.noNews.visibility = View.GONE
+                            binding.date.visibility = View.VISIBLE
+                            newsList.sortByDescending { makeDate(it.publishedAt) }
+                            binding.dateTxt.text = makeOnlyDate(newsList[0].publishedAt)
+                        }
+                        binding.recyclerViewNews.adapter =
+                            NewsAdapter(newsList, this, binding.dateTxt)
+                    })
+                }
+                "Error" -> {
+                    stopLoading()
+                    binding.date.visibility = View.GONE
+                    binding.noNews.visibility = View.VISIBLE
+                    binding.noNews.text = getString(R.string.error)
+                }
+                "Loading" -> {
+                    binding.noNews.visibility = View.GONE
+                    startLoading()
+                    binding.date.visibility = View.GONE
+                }
             }
         })
+    }
+
+    private fun stopLoading() {
+        binding.loading.stopAnimation()
+        binding.loading.visibility = View.GONE
+    }
+
+    private fun startLoading() {
+        binding.loading.startAnimation()
+        binding.loading.visibility = View.VISIBLE
+    }
+
+    private fun showNoNews() {
+        binding.noNews.visibility = View.VISIBLE
+        binding.noNews.text = getString(R.string.no_news)
     }
 
     override fun onPause() {
